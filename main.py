@@ -3,7 +3,6 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from dotenv import load_dotenv
 
-# Esto lee explícitamente el archivo .env ubicado en tu carpeta local
 load_dotenv()
 
 app = FastAPI()

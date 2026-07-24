@@ -130,36 +130,6 @@
             max-width: 600px;
         }
 
-        #glowPicker {
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            appearance: none;
-            width: 45px;
-            height: 45px;
-            background-color: transparent;
-            border: none;
-            cursor: pointer;
-            border-radius: 50%;
-            transition: transform 0.2s;
-            flex-shrink: 0;
-        }
-        
-        #glowPicker:hover {
-            transform: scale(1.05);
-        }
-        
-        #glowPicker::-webkit-color-swatch {
-            border-radius: 50%;
-            border: 2px solid #FFFFFF;
-            box-shadow: 0 0 8px rgba(0,0,0,0.1);
-        }
-        
-        #glowPicker::-moz-color-swatch {
-            border-radius: 50%;
-            border: 2px solid #FFFFFF;
-            box-shadow: 0 0 8px rgba(0,0,0,0.1);
-        }
-
         #flipBtn {
             background-color: #F1F5F9;
             color: var(--color-texto);
@@ -220,17 +190,15 @@
         /* DISEÑO RESPONSIVO PARA MÓVILES */
         @media (max-width: 600px) {
             .controls-row {
-                flex-wrap: wrap;
-                justify-content: space-between;
+                flex-direction: column;
+                align-items: stretch;
             }
-            #recordBtn {
-                order: -1; /* Mueve el botón principal a la parte superior en móviles */
+            #recordBtn, #flipBtn {
                 width: 100%;
-                flex-grow: 1;
-                margin-bottom: 10px;
+                margin: 0;
             }
             .text-display {
-                font-size: 22px; /* Ajusta el texto dinámico para pantallas estrechas */
+                font-size: 22px; 
             }
         }
 
@@ -259,7 +227,6 @@
     <div class="controls-container">
         <div id="estado">Sistema en espera.</div>
         <div class="controls-row">
-            <input type="color" id="glowPicker" value="#00a884" title="Configurar iluminación">
             <button id="recordBtn">Iniciar Transmisión</button>
             <button id="flipBtn" title="Girar panel superior para la persona al frente">↻ Girar</button>
         </div>
@@ -269,7 +236,6 @@
         const recordBtn = document.getElementById('recordBtn');
         const flipBtn = document.getElementById('flipBtn');
         const estado = document.getElementById('estado');
-        const glowPicker = document.getElementById('glowPicker');
         
         const topPanel = document.getElementById('topPanel');
         const textEn = document.getElementById('textEn');
@@ -278,22 +244,22 @@
         let recognizer;
         let isRecording = false;
         
-        let idiomaGlobalDeteccion = "es";
+        // El idioma inicial ahora arranca neutral y se confirma al primer evento de Azure
+        let idiomaGlobalDeteccion = null; 
 
         const AZURE_KEY = "INYECCION_AZURE_KEY";
         const AZURE_REGION = "INYECCION_AZURE_REGION";
-
-        glowPicker.addEventListener('input', (event) => {
-            const hexColor = event.target.value;
-            document.documentElement.style.setProperty('--glow-color', hexColor + '66'); 
-            document.documentElement.style.setProperty('--color-principal', hexColor);
-        });
 
         flipBtn.addEventListener('click', () => {
             topPanel.classList.toggle('rotated');
         });
 
         recordBtn.addEventListener('click', () => {
+            // FIX: Desbloqueo de Audio para Navegadores Móviles (Safari/Chrome)
+            // Reproducimos 1ms de silencio al hacer clic para habilitar el contexto de audio
+            const unlockAudio = new Audio("data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
+            unlockAudio.play().catch(() => {});
+
             if (!isRecording) {
                 iniciarTraduccionAzure();
             } else {
@@ -302,7 +268,6 @@
         });
 
         function iniciarTraduccionAzure() {
-            // Validador estricto para evitar el colapso silencioso del SDK
             if (!AZURE_KEY || AZURE_KEY === "TU_LLAVE_DE_AZURE_AQUI" || AZURE_KEY.trim() === "") {
                 alert("Error crítico: La clave de Azure está vacía. Verifica tu archivo local .env o las variables en Vercel.");
                 return;
@@ -333,6 +298,9 @@
                         }
                     } catch (error) {}
 
+                    // Si aún no detecta el idioma con certeza, esperamos a que Azure confirme para evitar cruzamientos lógicos
+                    if (!idiomaGlobalDeteccion) return; 
+
                     const idiomaDestinoSimple = idiomaGlobalDeteccion === "es" ? "en" : "es";
                     
                     let translatedText = "...";
@@ -352,6 +320,8 @@
                             }
                         } catch (error) {}
                         
+                        if (!idiomaGlobalDeteccion) return;
+
                         const idiomaDestinoSimple = idiomaGlobalDeteccion === "es" ? "en" : "es";
                         const originalText = e.result.text;
                         const translatedText = e.result.translations.get(idiomaDestinoSimple);
@@ -370,6 +340,8 @@
 
                 recognizer.startContinuousRecognitionAsync(() => {
                     isRecording = true;
+                    // Resetear el estado en cada nueva transmisión
+                    idiomaGlobalDeteccion = null;
                     recordBtn.textContent = "Detener Transmisión";
                     recordBtn.classList.add('recording');
                     estado.textContent = "Escuchando y traduciendo...";
@@ -393,6 +365,7 @@
             if (recognizer) {
                 recognizer.stopContinuousRecognitionAsync(() => {
                     isRecording = false;
+                    idiomaGlobalDeteccion = null;
                     recordBtn.textContent = "Iniciar Transmisión";
                     recordBtn.classList.remove('recording');
                     estado.textContent = "Sistema en espera.";
@@ -462,7 +435,7 @@
         function reproducirAudioSilencioso(base64Audio) {
             if (!base64Audio) return;
             const audio = new Audio("data:audio/mp3;base64," + base64Audio);
-            audio.play().catch(e => console.warn("Autoplay bloqueado por el navegador."));
+            audio.play().catch(e => console.warn("Autoplay bloqueado por el navegador.", e));
         }
     </script>
 </body>
