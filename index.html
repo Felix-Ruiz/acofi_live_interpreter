@@ -32,16 +32,41 @@
         }
 
         .header {
-            text-align: center;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             padding: 15px;
+            background-color: #FFFFFF;
+            z-index: 10;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        
+        .header-title {
             font-size: 13px;
             color: var(--color-texto-mutado);
             letter-spacing: 1.5px;
             text-transform: uppercase;
             font-weight: 600;
-            background-color: #FFFFFF;
-            z-index: 10;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        /* Nuevo diseño y posición del botón Girar */
+        #flipBtn {
+            position: absolute;
+            right: 15px;
+            background-color: #F8FAFC;
+            color: var(--color-texto);
+            border: 1px solid #E2E8F0;
+            padding: 8px 14px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+        }
+        
+        #flipBtn:hover {
+            background-color: #E2E8F0;
         }
 
         .split-container {
@@ -125,27 +150,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 15px;
             width: 100%;
             max-width: 600px;
-        }
-
-        #flipBtn {
-            background-color: #F1F5F9;
-            color: var(--color-texto);
-            border: 1px solid #E2E8F0;
-            padding: 16px 20px;
-            border-radius: 50px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            flex-shrink: 0;
-            white-space: nowrap;
-        }
-        
-        #flipBtn:hover {
-            background-color: #E2E8F0;
         }
 
         /* Botón 4D Estático Ovalado Inmaculado */
@@ -159,7 +165,6 @@
             font-weight: 600;
             letter-spacing: 0.5px;
             cursor: pointer;
-            transition: all 0.3s ease;
             box-shadow: 
                 inset 2px 2px 5px rgba(255, 255, 255, 0.4),
                 inset -3px -3px 7px rgba(0, 0, 0, 0.15),
@@ -189,24 +194,21 @@
 
         /* DISEÑO RESPONSIVO PARA MÓVILES */
         @media (max-width: 600px) {
-            .controls-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            #recordBtn, #flipBtn {
+            #recordBtn {
                 width: 100%;
-                margin: 0;
             }
             .text-display {
                 font-size: 22px; 
             }
         }
-
     </style>
 </head>
 <body>
 
-    <div class="header">Acofi • Live Interpreter</div>
+    <div class="header">
+        <span class="header-title">Acofi • Live Interpreter</span>
+        <button id="flipBtn" title="Girar panel superior para la persona al frente">↻ Girar</button>
+    </div>
     
     <div class="split-container">
         <div class="panel panel-top" id="topPanel">
@@ -227,8 +229,7 @@
     <div class="controls-container">
         <div id="estado">Sistema en espera.</div>
         <div class="controls-row">
-            <button id="recordBtn">Iniciar Transmisión</button>
-            <button id="flipBtn" title="Girar panel superior para la persona al frente">↻ Girar</button>
+            <button id="recordBtn">Iniciar Conversación</button>
         </div>
     </div>
 
@@ -244,7 +245,6 @@
         let recognizer;
         let isRecording = false;
         
-        // El idioma inicial ahora arranca neutral y se confirma al primer evento de Azure
         let idiomaGlobalDeteccion = null; 
 
         const AZURE_KEY = "INYECCION_AZURE_KEY";
@@ -255,8 +255,6 @@
         });
 
         recordBtn.addEventListener('click', () => {
-            // FIX: Desbloqueo de Audio para Navegadores Móviles (Safari/Chrome)
-            // Reproducimos 1ms de silencio al hacer clic para habilitar el contexto de audio
             const unlockAudio = new Audio("data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
             unlockAudio.play().catch(() => {});
 
@@ -298,7 +296,6 @@
                         }
                     } catch (error) {}
 
-                    // Si aún no detecta el idioma con certeza, esperamos a que Azure confirme para evitar cruzamientos lógicos
                     if (!idiomaGlobalDeteccion) return; 
 
                     const idiomaDestinoSimple = idiomaGlobalDeteccion === "es" ? "en" : "es";
@@ -340,7 +337,6 @@
 
                 recognizer.startContinuousRecognitionAsync(() => {
                     isRecording = true;
-                    // Resetear el estado en cada nueva transmisión
                     idiomaGlobalDeteccion = null;
                     recordBtn.textContent = "Detener Transmisión";
                     recordBtn.classList.add('recording');
