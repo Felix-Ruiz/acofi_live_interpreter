@@ -92,7 +92,7 @@
             font-weight: 400;
             line-height: 1.4;
             color: var(--color-texto);
-            max-width: 90%;
+            max-width: 100%;
             word-wrap: break-word;
         }
 
@@ -127,6 +127,7 @@
             align-items: center;
             gap: 15px;
             width: 100%;
+            max-width: 600px;
         }
 
         #glowPicker {
@@ -140,6 +141,7 @@
             cursor: pointer;
             border-radius: 50%;
             transition: transform 0.2s;
+            flex-shrink: 0;
         }
         
         #glowPicker:hover {
@@ -168,7 +170,10 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+            flex-shrink: 0;
+            white-space: nowrap;
         }
+        
         #flipBtn:hover {
             background-color: #E2E8F0;
         }
@@ -191,7 +196,9 @@
                 0px 8px 20px var(--glow-color),
                 0px 4px 5px rgba(0, 0, 0, 0.1);
             flex-grow: 1;
-            max-width: 250px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
         }
 
         #recordBtn.recording {
@@ -208,6 +215,23 @@
             0% { transform: scale(1); }
             50% { transform: scale(1.02); }
             100% { transform: scale(1); }
+        }
+
+        /* DISEÑO RESPONSIVO PARA MÓVILES */
+        @media (max-width: 600px) {
+            .controls-row {
+                flex-wrap: wrap;
+                justify-content: space-between;
+            }
+            #recordBtn {
+                order: -1; /* Mueve el botón principal a la parte superior en móviles */
+                width: 100%;
+                flex-grow: 1;
+                margin-bottom: 10px;
+            }
+            .text-display {
+                font-size: 22px; /* Ajusta el texto dinámico para pantallas estrechas */
+            }
         }
 
     </style>
@@ -254,7 +278,6 @@
         let recognizer;
         let isRecording = false;
         
-        // VARIABLE DE ESTADO PERSISTENTE
         let idiomaGlobalDeteccion = "es";
 
         const AZURE_KEY = "INYECCION_AZURE_KEY";
@@ -279,12 +302,13 @@
         });
 
         function iniciarTraduccionAzure() {
-            try {
-                if (AZURE_KEY === "TU_LLAVE_DE_AZURE_AQUI") {
-                    alert("Por favor, inserta tu clave de Azure en el archivo main.py.");
-                    return;
-                }
+            // Validador estricto para evitar el colapso silencioso del SDK
+            if (!AZURE_KEY || AZURE_KEY === "TU_LLAVE_DE_AZURE_AQUI" || AZURE_KEY.trim() === "") {
+                alert("Error crítico: La clave de Azure está vacía. Verifica tu archivo local .env o las variables en Vercel.");
+                return;
+            }
 
+            try {
                 const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(AZURE_KEY, AZURE_REGION);
                 speechConfig.addTargetLanguage("en");
                 speechConfig.addTargetLanguage("es");
@@ -298,7 +322,6 @@
 
                 recognizer = SpeechSDK.TranslationRecognizer.FromConfig(speechConfig, autoDetectSourceLanguageConfig, audioConfig);
 
-                // ACTUALIZACIÓN EN VIVO CON MEMORIA DE IDIOMA
                 recognizer.recognizing = (s, e) => {
                     const textoCrudo = e.result.text;
                     if (!textoCrudo) return;
@@ -320,7 +343,6 @@
                     actualizarPantallas(idiomaGlobalDeteccion, textoCrudo, translatedText, true);
                 };
 
-                // RESULTADO FINAL CON MEMORIA DE IDIOMA
                 recognizer.recognized = (s, e) => {
                     if (e.result.reason === SpeechSDK.ResultReason.TranslatedSpeech) {
                         try {
@@ -358,11 +380,12 @@
                     textEs.textContent = "...";
                 }, err => {
                     console.error("Error SDK:", err);
-                    alert("Error de conexión. Verifica el micrófono.");
+                    alert("Error de conexión. Verifica los permisos de tu micrófono.");
                 });
 
             } catch (err) {
                 console.error("Error inicializando Azure:", err);
+                alert("Ocurrió un error al configurar el motor de voz.");
             }
         }
 
