@@ -27,19 +27,22 @@
             margin: 0;
             display: flex;
             flex-direction: column;
-            height: 100vh;
+            /* FIX MÓVIL: 100dvh obliga al navegador a respetar la barra de navegación dinámica */
+            height: 100vh; 
+            height: 100dvh; 
             overflow: hidden; 
         }
 
+        /* FIX ENCABEZADO: Alineación flexible para evitar superposición */
         .header {
-            position: relative;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            padding: 15px;
+            padding: 12px 20px;
             background-color: #FFFFFF;
             z-index: 10;
             box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            flex-shrink: 0;
         }
         
         .header-title {
@@ -48,12 +51,13 @@
             letter-spacing: 1.5px;
             text-transform: uppercase;
             font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-right: 15px;
         }
 
-        /* Nuevo diseño y posición del botón Girar */
         #flipBtn {
-            position: absolute;
-            right: 15px;
             background-color: #F8FAFC;
             color: var(--color-texto);
             border: 1px solid #E2E8F0;
@@ -63,6 +67,7 @@
             font-weight: 600;
             cursor: pointer;
             box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+            flex-shrink: 0;
         }
         
         #flipBtn:hover {
@@ -74,6 +79,8 @@
             display: flex;
             flex-direction: column;
             width: 100%;
+            /* FIX MÓVIL: Permite encoger los paneles para no empujar el botón principal fuera de la pantalla */
+            min-height: 0; 
         }
 
         .panel {
@@ -86,6 +93,7 @@
             text-align: center;
             position: relative;
             transition: transform 0.4s ease;
+            min-height: 0;
         }
 
         .panel-top {
@@ -119,6 +127,8 @@
             color: var(--color-texto);
             max-width: 100%;
             word-wrap: break-word;
+            overflow-y: auto; /* Evita que textos largos rompan la pantalla */
+            max-height: 100%;
         }
 
         .text-placeholder {
@@ -137,6 +147,8 @@
             gap: 15px;
             z-index: 10;
             box-shadow: 0 -4px 15px rgba(0,0,0,0.02);
+            /* FIX MÓVIL: Esto obliga al navegador a dibujar siempre el bloque en pantalla, sin encogerlo */
+            flex-shrink: 0; 
         }
 
         #estado {
@@ -174,6 +186,7 @@
             white-space: nowrap;
             text-overflow: ellipsis;
             overflow: hidden;
+            width: 100%;
         }
 
         #recordBtn.recording {
@@ -192,11 +205,7 @@
             100% { transform: scale(1); }
         }
 
-        /* DISEÑO RESPONSIVO PARA MÓVILES */
         @media (max-width: 600px) {
-            #recordBtn {
-                width: 100%;
-            }
             .text-display {
                 font-size: 22px; 
             }
@@ -207,7 +216,7 @@
 
     <div class="header">
         <span class="header-title">Acofi • Live Interpreter</span>
-        <button id="flipBtn" title="Girar panel superior para la persona al frente">↻ Girar</button>
+        <button id="flipBtn" title="Girar panel superior">↻ Girar</button>
     </div>
     
     <div class="split-container">
@@ -229,7 +238,7 @@
     <div class="controls-container">
         <div id="estado">Sistema en espera.</div>
         <div class="controls-row">
-            <button id="recordBtn">Iniciar Conversación</button>
+            <button id="recordBtn">Iniciar Transmisión</button>
         </div>
     </div>
 
