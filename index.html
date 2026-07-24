@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acofi Translator</title>
+    <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
+    <style>
+        :root {
+            /* Tema Blanco Diamante */
+            --color-fondo: #FDFEFE;
+            --color-principal: #00a884;
+            --color-texto: #1E293B;
+            --color-texto-mutado: #94A3B8;
+            --glow-color: rgba(0, 168, 132, 0.4);
+            --color-panel-separador: rgba(0, 0, 0, 0.05);
+        }
+        
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--color-fondo);
+            color: var(--color-texto);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden; 
+        }
+
+        .header {
+            text-align: center;
+            padding: 15px;
+            font-size: 13px;
+            color: var(--color-texto-mutado);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            font-weight: 600;
+            background-color: #FFFFFF;
+            z-index: 10;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .split-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            text-align: center;
+            position: relative;
+            transition: transform 0.4s ease;
+        }
+
+        .panel-top {
+            background-color: #F8FAFC;
+            border-bottom: 2px solid var(--color-panel-separador);
+        }
+
+        .panel-top.rotated {
+            transform: rotate(180deg);
+        }
+
+        .panel-bottom {
+            background-color: #FFFFFF;
+        }
+
+        .lang-label {
+            position: absolute;
+            top: 20px;
+            font-size: 12px;
+            color: var(--color-principal);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+
+        .text-display {
+            font-size: 28px; 
+            font-weight: 400;
+            line-height: 1.4;
+            color: var(--color-texto);
+            max-width: 90%;
+            word-wrap: break-word;
+        }
+
+        .text-placeholder {
+            color: var(--color-texto-mutado);
+            font-style: italic;
+            opacity: 0.5;
+        }
+
+        .controls-container {
+            background: #FFFFFF;
+            padding: 20px;
+            border-top: 1px solid var(--color-panel-separador);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            z-index: 10;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.02);
+        }
+
+        #estado {
+            font-size: 13px;
+            color: var(--color-texto-mutado);
+            font-weight: 500;
+            height: 15px;
+        }
+
+        .controls-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        #glowPicker {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 45px;
+            height: 45px;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            border-radius: 50%;
+            transition: transform 0.2s;
+        }
+        
+        #glowPicker:hover {
+            transform: scale(1.05);
+        }
+        
+        #glowPicker::-webkit-color-swatch {
+            border-radius: 50%;
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        }
+        
+        #glowPicker::-moz-color-swatch {
+            border-radius: 50%;
+            border: 2px solid #FFFFFF;
+            box-shadow: 0 0 8px rgba(0,0,0,0.1);
+        }
+
+        #flipBtn {
+            background-color: #F1F5F9;
+            color: var(--color-texto);
+            border: 1px solid #E2E8F0;
+            padding: 16px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #flipBtn:hover {
+            background-color: #E2E8F0;
+        }
+
+        /* Botón 4D Estático Ovalado Inmaculado */
+        #recordBtn {
+            background-color: var(--color-principal);
+            color: #FFFFFF;
+            border: none;
+            padding: 16px 40px;
+            border-radius: 50px; 
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 
+                inset 2px 2px 5px rgba(255, 255, 255, 0.4),
+                inset -3px -3px 7px rgba(0, 0, 0, 0.15),
+                0px 8px 20px var(--glow-color),
+                0px 4px 5px rgba(0, 0, 0, 0.1);
+            flex-grow: 1;
+            max-width: 250px;
+        }
+
+        #recordBtn.recording {
+            background-color: #ea0038;
+            box-shadow: 
+                inset 2px 2px 5px rgba(255, 255, 255, 0.4),
+                inset -3px -3px 7px rgba(0, 0, 0, 0.15),
+                0px 8px 25px rgba(234, 0, 56, 0.5),
+                0px 4px 5px rgba(0, 0, 0, 0.1);
+            animation: pulse-border 1.5s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">Acofi • Live Interpreter</div>
+    
+    <div class="split-container">
+        <div class="panel panel-top" id="topPanel">
+            <div class="lang-label">English</div>
+            <div class="text-display text-placeholder" id="textEn">
+                Waiting for speech...
+            </div>
+        </div>
+
+        <div class="panel panel-bottom" id="bottomPanel">
+            <div class="lang-label">Español</div>
+            <div class="text-display text-placeholder" id="textEs">
+                Esperando voz...
+            </div>
+        </div>
+    </div>
+    
+    <div class="controls-container">
+        <div id="estado">Sistema en espera.</div>
+        <div class="controls-row">
+            <input type="color" id="glowPicker" value="#00a884" title="Configurar iluminación">
+            <button id="recordBtn">Iniciar Transmisión</button>
+            <button id="flipBtn" title="Girar panel superior para la persona al frente">↻ Girar</button>
+        </div>
+    </div>
+
+    <script>
+        const recordBtn = document.getElementById('recordBtn');
+        const flipBtn = document.getElementById('flipBtn');
+        const estado = document.getElementById('estado');
+        const glowPicker = document.getElementById('glowPicker');
+        
+        const topPanel = document.getElementById('topPanel');
+        const textEn = document.getElementById('textEn');
+        const textEs = document.getElementById('textEs');
+        
+        let recognizer;
+        let isRecording = false;
+        
+        // VARIABLE DE ESTADO PERSISTENTE
+        let idiomaGlobalDeteccion = "es";
+
+        const AZURE_KEY = "INYECCION_AZURE_KEY";
+        const AZURE_REGION = "INYECCION_AZURE_REGION";
+
+        glowPicker.addEventListener('input', (event) => {
+            const hexColor = event.target.value;
+            document.documentElement.style.setProperty('--glow-color', hexColor + '66'); 
+            document.documentElement.style.setProperty('--color-principal', hexColor);
+        });
+
+        flipBtn.addEventListener('click', () => {
+            topPanel.classList.toggle('rotated');
+        });
+
+        recordBtn.addEventListener('click', () => {
+            if (!isRecording) {
+                iniciarTraduccionAzure();
+            } else {
+                detenerTraduccionAzure();
+            }
+        });
+
+        function iniciarTraduccionAzure() {
+            try {
+                if (AZURE_KEY === "TU_LLAVE_DE_AZURE_AQUI") {
+                    alert("Por favor, inserta tu clave de Azure en el archivo main.py.");
+                    return;
+                }
+
+                const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(AZURE_KEY, AZURE_REGION);
+                speechConfig.addTargetLanguage("en");
+                speechConfig.addTargetLanguage("es");
+
+                speechConfig.setProperty(SpeechSDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, "500");
+                speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_LanguageIdMode, "Continuous");
+                speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceResponse_OsfPreventLatency, "true");
+
+                const autoDetectSourceLanguageConfig = SpeechSDK.AutoDetectSourceLanguageConfig.fromLanguages(["en-US", "es-CO"]);
+                const audioConfig = SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+
+                recognizer = SpeechSDK.TranslationRecognizer.FromConfig(speechConfig, autoDetectSourceLanguageConfig, audioConfig);
+
+                // ACTUALIZACIÓN EN VIVO CON MEMORIA DE IDIOMA
+                recognizer.recognizing = (s, e) => {
+                    const textoCrudo = e.result.text;
+                    if (!textoCrudo) return;
+
+                    try {
+                        const autoDetectLanguageResult = SpeechSDK.AutoDetectSourceLanguageResult.fromResult(e.result);
+                        if (autoDetectLanguageResult && autoDetectLanguageResult.language && autoDetectLanguageResult.language !== "Unknown") {
+                            idiomaGlobalDeteccion = autoDetectLanguageResult.language.startsWith("en") ? "en" : "es";
+                        }
+                    } catch (error) {}
+
+                    const idiomaDestinoSimple = idiomaGlobalDeteccion === "es" ? "en" : "es";
+                    
+                    let translatedText = "...";
+                    if (e.result.translations) {
+                        translatedText = e.result.translations.get(idiomaDestinoSimple) || "...";
+                    }
+
+                    actualizarPantallas(idiomaGlobalDeteccion, textoCrudo, translatedText, true);
+                };
+
+                // RESULTADO FINAL CON MEMORIA DE IDIOMA
+                recognizer.recognized = (s, e) => {
+                    if (e.result.reason === SpeechSDK.ResultReason.TranslatedSpeech) {
+                        try {
+                            const autoDetectLanguageResult = SpeechSDK.AutoDetectSourceLanguageResult.fromResult(e.result);
+                            if (autoDetectLanguageResult && autoDetectLanguageResult.language && autoDetectLanguageResult.language !== "Unknown") {
+                                idiomaGlobalDeteccion = autoDetectLanguageResult.language.startsWith("en") ? "en" : "es";
+                            }
+                        } catch (error) {}
+                        
+                        const idiomaDestinoSimple = idiomaGlobalDeteccion === "es" ? "en" : "es";
+                        const originalText = e.result.text;
+                        const translatedText = e.result.translations.get(idiomaDestinoSimple);
+
+                        if (originalText && translatedText) {
+                            actualizarPantallas(idiomaGlobalDeteccion, originalText, translatedText, false);
+                            procesarAudioNeuronal(idiomaDestinoSimple, translatedText);
+                        }
+                    }
+                };
+
+                recognizer.canceled = (s, e) => {
+                    console.error("Conexión interrumpida:", e.errorDetails);
+                    detenerTraduccionAzure();
+                };
+
+                recognizer.startContinuousRecognitionAsync(() => {
+                    isRecording = true;
+                    recordBtn.textContent = "Detener Transmisión";
+                    recordBtn.classList.add('recording');
+                    estado.textContent = "Escuchando y traduciendo...";
+                    
+                    textEn.classList.remove('text-placeholder');
+                    textEs.classList.remove('text-placeholder');
+                    textEn.textContent = "...";
+                    textEs.textContent = "...";
+                }, err => {
+                    console.error("Error SDK:", err);
+                    alert("Error de conexión. Verifica el micrófono.");
+                });
+
+            } catch (err) {
+                console.error("Error inicializando Azure:", err);
+            }
+        }
+
+        function detenerTraduccionAzure() {
+            if (recognizer) {
+                recognizer.stopContinuousRecognitionAsync(() => {
+                    isRecording = false;
+                    recordBtn.textContent = "Iniciar Transmisión";
+                    recordBtn.classList.remove('recording');
+                    estado.textContent = "Sistema en espera.";
+                    textEn.classList.add('text-placeholder');
+                    textEs.classList.add('text-placeholder');
+                    textEn.textContent = "Waiting for speech...";
+                    textEs.textContent = "Esperando voz...";
+                    recognizer.close();
+                    recognizer = undefined;
+                });
+            }
+        }
+
+        function actualizarPantallas(idiomaOrigen, original, traducido, esEnVivo) {
+            textEn.classList.remove('text-placeholder');
+            textEs.classList.remove('text-placeholder');
+
+            if (esEnVivo) {
+                textEn.style.opacity = "0.7";
+                textEs.style.opacity = "0.7";
+            } else {
+                textEn.style.opacity = "1";
+                textEs.style.opacity = "1";
+            }
+
+            if (idiomaOrigen === 'es') {
+                textEs.textContent = original;
+                textEn.textContent = traducido;
+            } else {
+                textEn.textContent = original;
+                textEs.textContent = traducido;
+            }
+        }
+
+        function procesarAudioNeuronal(idiomaDestinoSimple, translatedText) {
+            estado.textContent = "Reproduciendo traducción...";
+            
+            const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(AZURE_KEY, AZURE_REGION);
+            synthConfig.speechSynthesisOutputFormat = SpeechSDK.SpeechSynthesisOutputFormat.Audio16Khz32KBitRateMonoMp3;
+            synthConfig.speechSynthesisVoiceName = idiomaDestinoSimple === "en" ? "en-US-AvaMultilingualNeural" : "es-CO-SalomeNeural";
+            
+            const synthesizer = new SpeechSDK.SpeechSynthesizer(synthConfig, null);
+            
+            synthesizer.speakTextAsync(
+                translatedText,
+                result => {
+                    if (result.audioData) {
+                        let binary = '';
+                        const bytes = new Uint8Array(result.audioData);
+                        for (let i = 0; i < bytes.byteLength; i++) {
+                            binary += String.fromCharCode(bytes[i]);
+                        }
+                        const base64Audio = window.btoa(binary);
+                        reproducirAudioSilencioso(base64Audio);
+                    }
+                    synthesizer.close();
+                    estado.textContent = "Escuchando y traduciendo...";
+                },
+                error => {
+                    console.error("Fallo de audio neuronal:", error);
+                    synthesizer.close();
+                    estado.textContent = "Escuchando y traduciendo...";
+                }
+            );
+        }
+
+        function reproducirAudioSilencioso(base64Audio) {
+            if (!base64Audio) return;
+            const audio = new Audio("data:audio/mp3;base64," + base64Audio);
+            audio.play().catch(e => console.warn("Autoplay bloqueado por el navegador."));
+        }
+    </script>
+</body>
+</html>
