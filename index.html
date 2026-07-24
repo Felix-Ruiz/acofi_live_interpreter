@@ -84,10 +84,6 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 40px 20px;
-            text-align: center;
             position: relative;
             transition: transform 0.4s ease;
             min-height: 0;
@@ -106,32 +102,134 @@
             background-color: #FFFFFF;
         }
 
+        /* FIX: Cabecera estática blindada para evitar el cruce de textos */
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 12px 0;
+            background-color: inherit;
+            border-bottom: 1px solid var(--color-panel-separador);
+            gap: 8px;
+            flex-shrink: 0;
+            z-index: 5;
+        }
+
         .lang-label {
-            position: absolute;
-            top: 20px;
-            font-size: 12px;
+            font-size: 13px;
             color: var(--color-principal);
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
-            opacity: 0.8;
+            margin: 0;
         }
 
-        .text-display {
-            font-size: 28px; 
+        .history-container {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            padding: 20px; /* Padding reducido al tener una cabecera aislada */
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            scroll-behavior: smooth;
+        }
+
+        .message-block {
+            display: flex;
+            flex-direction: row;
+            align-items: center; 
+            justify-content: center;
+            width: 100%;
+            animation: fadeIn 0.3s ease-out;
+            gap: 12px; 
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* DISEÑO DE AVATARES PREMIUM */
+        .avatar {
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .avatar-blue { 
+            background: linear-gradient(135deg, #3B82F6, #2563EB);
+            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+            color: #FFFFFF; 
+        }
+        
+        .avatar-red { 
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+            color: #FFFFFF; 
+        }
+        
+        /* Tamaños de Avatar para Cabeceras e Historial */
+        .avatar-small { 
+            width: 20px; 
+            height: 20px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.15); 
+        }
+        .avatar-small svg { width: 11px; height: 11px; }
+
+        .avatar-large { 
+            width: 32px; 
+            height: 32px; 
+        }
+        .avatar-large svg { width: 16px; height: 16px; }
+
+        .avatar svg { 
+            fill: none; 
+            stroke: currentColor; 
+            stroke-width: 2; 
+            stroke-linecap: round; 
+            stroke-linejoin: round; 
+        }
+
+        .message-text {
+            font-size: 26px; 
             font-weight: 400;
             line-height: 1.4;
             color: var(--color-texto);
             max-width: 100%;
             word-wrap: break-word;
-            overflow-y: auto;
-            max-height: 100%;
+            text-align: center;
         }
 
-        .text-placeholder {
-            color: var(--color-texto-mutado);
-            font-style: italic;
+        .message-live {
             opacity: 0.5;
+        }
+
+        .play-btn {
+            background-color: #F1F5F9;
+            color: var(--color-texto-mutado);
+            border: 1px solid #E2E8F0;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            padding: 0;
+            padding-left: 2px;
+        }
+        
+        .play-btn:hover {
+            background-color: #E2E8F0;
+            color: var(--color-principal);
+            border-color: var(--color-principal);
         }
 
         .controls-container {
@@ -201,7 +299,7 @@
         }
 
         @media (max-width: 600px) {
-            .text-display {
+            .message-text {
                 font-size: 22px; 
             }
         }
@@ -215,17 +313,29 @@
     </div>
     
     <div class="split-container">
+        <!-- PANEL INGLÉS -->
         <div class="panel panel-top" id="topPanel">
-            <div class="lang-label">English</div>
-            <div class="text-display text-placeholder" id="textEn">
-                Waiting for speech...
+            <div class="panel-header">
+                <div class="avatar avatar-blue avatar-small">
+                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                <h2 class="lang-label">English</h2>
+            </div>
+            <div class="history-container" id="historyEn">
+                <!-- El historial en inglés se dibujará aquí -->
             </div>
         </div>
 
+        <!-- PANEL ESPAÑOL -->
         <div class="panel panel-bottom" id="bottomPanel">
-            <div class="lang-label">Español</div>
-            <div class="text-display text-placeholder" id="textEs">
-                Esperando voz...
+            <div class="panel-header">
+                <div class="avatar avatar-red avatar-small">
+                    <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </div>
+                <h2 class="lang-label">Español</h2>
+            </div>
+            <div class="history-container" id="historyEs">
+                <!-- El historial en español se dibujará aquí -->
             </div>
         </div>
     </div>
@@ -233,11 +343,11 @@
     <div class="controls-container">
         <div id="estado">Sistema en espera.</div>
         <div class="controls-row">
-            <button id="recordBtn">Iniciar Transmisión</button>
+            <button id="recordBtn">Iniciar Conversación</button>
         </div>
     </div>
 
-    <!-- FIX iOS: Reproductor global persistente anclado al DOM -->
+    <!-- Reproductor global para saltear el bloqueo de iOS -->
     <audio id="reproductorGlobal" style="display:none;"></audio>
 
     <script>
@@ -247,12 +357,11 @@
         const reproductorGlobal = document.getElementById('reproductorGlobal');
         
         const topPanel = document.getElementById('topPanel');
-        const textEn = document.getElementById('textEn');
-        const textEs = document.getElementById('textEs');
+        const historyEn = document.getElementById('historyEn');
+        const historyEs = document.getElementById('historyEs');
         
         let recognizer;
         let isRecording = false;
-        
         let idiomaGlobalDeteccion = null; 
 
         const AZURE_KEY = "INYECCION_AZURE_KEY";
@@ -263,7 +372,6 @@
         });
 
         recordBtn.addEventListener('click', () => {
-            // FIX iOS: Desbloquear el reproductor global físico mediante un gesto directo del usuario
             reproductorGlobal.src = "data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq";
             reproductorGlobal.play().catch(() => {});
 
@@ -280,12 +388,15 @@
                 return;
             }
 
+            historyEn.innerHTML = '';
+            historyEs.innerHTML = '';
+
             try {
                 const speechConfig = SpeechSDK.SpeechTranslationConfig.fromSubscription(AZURE_KEY, AZURE_REGION);
                 speechConfig.addTargetLanguage("en");
                 speechConfig.addTargetLanguage("es");
 
-                speechConfig.setProperty(SpeechSDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, "500");
+                speechConfig.setProperty(SpeechSDK.PropertyId.Speech_SegmentationSilenceTimeoutMs, "1000");
                 speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceConnection_LanguageIdMode, "Continuous");
                 speechConfig.setProperty(SpeechSDK.PropertyId.SpeechServiceResponse_OsfPreventLatency, "true");
 
@@ -308,13 +419,12 @@
                     if (!idiomaGlobalDeteccion) return; 
 
                     const idiomaDestinoSimple = idiomaGlobalDeteccion === "es" ? "en" : "es";
-                    
                     let translatedText = "...";
                     if (e.result.translations) {
                         translatedText = e.result.translations.get(idiomaDestinoSimple) || "...";
                     }
 
-                    actualizarPantallas(idiomaGlobalDeteccion, textoCrudo, translatedText, true);
+                    actualizarHistorial(idiomaGlobalDeteccion, textoCrudo, translatedText, true);
                 };
 
                 recognizer.recognized = (s, e) => {
@@ -333,12 +443,10 @@
                         const translatedText = e.result.translations.get(idiomaDestinoSimple);
 
                         if (originalText && translatedText) {
-                            actualizarPantallas(idiomaGlobalDeteccion, originalText, translatedText, false);
-                            procesarAudioNeuronal(idiomaDestinoSimple, translatedText);
+                            const targetId = actualizarHistorial(idiomaGlobalDeteccion, originalText, translatedText, false);
+                            procesarAudioNeuronal(idiomaDestinoSimple, translatedText, targetId);
                         }
                         
-                        // FIX CONVERSACIONES LARGAS: Borramos el idioma detectado al finalizar la frase
-                        // Obligando a Azure a detectar limpiamente el idioma de la próxima oración
                         idiomaGlobalDeteccion = null;
                     }
                 };
@@ -354,11 +462,6 @@
                     recordBtn.textContent = "Detener Transmisión";
                     recordBtn.classList.add('recording');
                     estado.textContent = "Escuchando y traduciendo...";
-                    
-                    textEn.classList.remove('text-placeholder');
-                    textEs.classList.remove('text-placeholder');
-                    textEn.textContent = "...";
-                    textEs.textContent = "...";
                 }, err => {
                     console.error("Error SDK:", err);
                     alert("Error de conexión. Verifica los permisos de tu micrófono.");
@@ -378,38 +481,60 @@
                     recordBtn.textContent = "Iniciar Transmisión";
                     recordBtn.classList.remove('recording');
                     estado.textContent = "Sistema en espera.";
-                    textEn.classList.add('text-placeholder');
-                    textEs.classList.add('text-placeholder');
-                    textEn.textContent = "Waiting for speech...";
-                    textEs.textContent = "Esperando voz...";
+                    
+                    document.querySelectorAll('.message-live').forEach(e => e.remove());
+                    
                     recognizer.close();
                     recognizer = undefined;
                 });
             }
         }
 
-        function actualizarPantallas(idiomaOrigen, original, traducido, esEnVivo) {
-            textEn.classList.remove('text-placeholder');
-            textEs.classList.remove('text-placeholder');
+        function actualizarHistorial(idiomaOrigen, original, traducido, esEnVivo) {
+            document.querySelectorAll('.message-live').forEach(e => e.remove());
+
+            // Icono SVG renovado con diseño minimalista
+            const svgPerson = `<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>`;
+            
+            const avatarClass = idiomaOrigen === 'en' ? 'avatar-blue' : 'avatar-red';
+            const avatarHTML = `<div class="avatar avatar-large ${avatarClass}" title="${idiomaOrigen === 'en' ? 'Inglés original' : 'Español original'}">${svgPerson}</div>`;
 
             if (esEnVivo) {
-                textEn.style.opacity = "0.7";
-                textEs.style.opacity = "0.7";
-            } else {
-                textEn.style.opacity = "1";
-                textEs.style.opacity = "1";
-            }
+                const liveEn = document.createElement('div');
+                liveEn.className = 'message-block message-live';
+                liveEn.innerHTML = `${avatarHTML}<div class="message-text">${idiomaOrigen === 'es' ? traducido : original}</div>`;
+                historyEn.appendChild(liveEn);
 
-            if (idiomaOrigen === 'es') {
-                textEs.textContent = original;
-                textEn.textContent = traducido;
+                const liveEs = document.createElement('div');
+                liveEs.className = 'message-block message-live';
+                liveEs.innerHTML = `${avatarHTML}<div class="message-text">${idiomaOrigen === 'es' ? original : traducido}</div>`;
+                historyEs.appendChild(liveEs);
+
+                historyEn.scrollTop = historyEn.scrollHeight;
+                historyEs.scrollTop = historyEs.scrollHeight;
             } else {
-                textEn.textContent = original;
-                textEs.textContent = traducido;
+                const uniqueId = 'msg-' + Date.now();
+                
+                const finalEn = document.createElement('div');
+                finalEn.className = 'message-block';
+                finalEn.id = uniqueId + '-en';
+                finalEn.innerHTML = `${avatarHTML}<div class="message-text">${idiomaOrigen === 'es' ? traducido : original}</div>`;
+                historyEn.appendChild(finalEn);
+
+                const finalEs = document.createElement('div');
+                finalEs.className = 'message-block';
+                finalEs.id = uniqueId + '-es';
+                finalEs.innerHTML = `${avatarHTML}<div class="message-text">${idiomaOrigen === 'es' ? original : traducido}</div>`;
+                historyEs.appendChild(finalEs);
+
+                historyEn.scrollTop = historyEn.scrollHeight;
+                historyEs.scrollTop = historyEs.scrollHeight;
+
+                return idiomaOrigen === 'es' ? finalEn.id : finalEs.id;
             }
         }
 
-        function procesarAudioNeuronal(idiomaDestinoSimple, translatedText) {
+        function procesarAudioNeuronal(idiomaDestinoSimple, translatedText, targetId) {
             estado.textContent = "Reproduciendo traducción...";
             
             const synthConfig = SpeechSDK.SpeechConfig.fromSubscription(AZURE_KEY, AZURE_REGION);
@@ -428,7 +553,18 @@
                             binary += String.fromCharCode(bytes[i]);
                         }
                         const base64Audio = window.btoa(binary);
+                        
                         reproducirAudioSilencioso(base64Audio);
+                        
+                        const contenedorDestino = document.getElementById(targetId);
+                        if (contenedorDestino) {
+                            const playBtn = document.createElement('button');
+                            playBtn.className = 'play-btn';
+                            playBtn.title = 'Reproducir';
+                            playBtn.innerHTML = '▶';
+                            playBtn.onclick = () => reproducirAudioSilencioso(base64Audio);
+                            contenedorDestino.appendChild(playBtn);
+                        }
                     }
                     synthesizer.close();
                     estado.textContent = "Escuchando y traduciendo...";
@@ -443,7 +579,6 @@
 
         function reproducirAudioSilencioso(base64Audio) {
             if (!base64Audio) return;
-            // FIX iOS: Inyectamos el audio real en el reproductor global que ya fue autorizado
             reproductorGlobal.src = "data:audio/mp3;base64," + base64Audio;
             reproductorGlobal.play().catch(e => console.warn("Autoplay bloqueado.", e));
         }
