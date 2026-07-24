@@ -27,13 +27,11 @@
             margin: 0;
             display: flex;
             flex-direction: column;
-            /* FIX MÓVIL: 100dvh obliga al navegador a respetar la barra de navegación dinámica */
             height: 100vh; 
             height: 100dvh; 
             overflow: hidden; 
         }
 
-        /* FIX ENCABEZADO: Alineación flexible para evitar superposición */
         .header {
             display: flex;
             justify-content: space-between;
@@ -79,7 +77,6 @@
             display: flex;
             flex-direction: column;
             width: 100%;
-            /* FIX MÓVIL: Permite encoger los paneles para no empujar el botón principal fuera de la pantalla */
             min-height: 0; 
         }
 
@@ -127,7 +124,7 @@
             color: var(--color-texto);
             max-width: 100%;
             word-wrap: break-word;
-            overflow-y: auto; /* Evita que textos largos rompan la pantalla */
+            overflow-y: auto;
             max-height: 100%;
         }
 
@@ -147,7 +144,6 @@
             gap: 15px;
             z-index: 10;
             box-shadow: 0 -4px 15px rgba(0,0,0,0.02);
-            /* FIX MÓVIL: Esto obliga al navegador a dibujar siempre el bloque en pantalla, sin encogerlo */
             flex-shrink: 0; 
         }
 
@@ -166,7 +162,6 @@
             max-width: 600px;
         }
 
-        /* Botón 4D Estático Ovalado Inmaculado */
         #recordBtn {
             background-color: var(--color-principal);
             color: #FFFFFF;
@@ -242,10 +237,14 @@
         </div>
     </div>
 
+    <!-- FIX iOS: Reproductor global persistente anclado al DOM -->
+    <audio id="reproductorGlobal" style="display:none;"></audio>
+
     <script>
         const recordBtn = document.getElementById('recordBtn');
         const flipBtn = document.getElementById('flipBtn');
         const estado = document.getElementById('estado');
+        const reproductorGlobal = document.getElementById('reproductorGlobal');
         
         const topPanel = document.getElementById('topPanel');
         const textEn = document.getElementById('textEn');
@@ -264,8 +263,9 @@
         });
 
         recordBtn.addEventListener('click', () => {
-            const unlockAudio = new Audio("data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq");
-            unlockAudio.play().catch(() => {});
+            // FIX iOS: Desbloquear el reproductor global físico mediante un gesto directo del usuario
+            reproductorGlobal.src = "data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq";
+            reproductorGlobal.play().catch(() => {});
 
             if (!isRecording) {
                 iniciarTraduccionAzure();
@@ -276,7 +276,7 @@
 
         function iniciarTraduccionAzure() {
             if (!AZURE_KEY || AZURE_KEY === "TU_LLAVE_DE_AZURE_AQUI" || AZURE_KEY.trim() === "") {
-                alert("Error crítico: La clave de Azure está vacía. Verifica tu archivo local .env o las variables en Vercel.");
+                alert("Error crítico: La clave de Azure está vacía.");
                 return;
             }
 
@@ -336,6 +336,10 @@
                             actualizarPantallas(idiomaGlobalDeteccion, originalText, translatedText, false);
                             procesarAudioNeuronal(idiomaDestinoSimple, translatedText);
                         }
+                        
+                        // FIX CONVERSACIONES LARGAS: Borramos el idioma detectado al finalizar la frase
+                        // Obligando a Azure a detectar limpiamente el idioma de la próxima oración
+                        idiomaGlobalDeteccion = null;
                     }
                 };
 
@@ -439,8 +443,9 @@
 
         function reproducirAudioSilencioso(base64Audio) {
             if (!base64Audio) return;
-            const audio = new Audio("data:audio/mp3;base64," + base64Audio);
-            audio.play().catch(e => console.warn("Autoplay bloqueado por el navegador.", e));
+            // FIX iOS: Inyectamos el audio real en el reproductor global que ya fue autorizado
+            reproductorGlobal.src = "data:audio/mp3;base64," + base64Audio;
+            reproductorGlobal.play().catch(e => console.warn("Autoplay bloqueado.", e));
         }
     </script>
 </body>
