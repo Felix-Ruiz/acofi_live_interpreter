@@ -1,6 +1,6 @@
 {
   "name": "Acofi Live Interpreter",
-  "short_name": "Acofi",
+  "short_name": "Acofi Live Interpreter",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
