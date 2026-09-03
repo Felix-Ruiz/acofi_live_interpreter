@@ -346,14 +346,13 @@
     <div class="controls-container">
         <div id="estado">Sistema en espera.</div>
         <div class="controls-row">
-            <button id="recordBtn">Iniciar Conversación</button>
+            <button id="recordBtn">Iniciar Transmisión</button>
         </div>
     </div>
 
     <audio id="reproductorGlobal" style="display:none;"></audio>
 
     <script>
-        // Registrar el Service Worker de la PWA
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW Error:', err));
@@ -462,6 +461,12 @@
 
                 recognizer.canceled = (s, e) => {
                     console.error("Conexión interrumpida:", e.errorDetails);
+                    
+                    // FIX: Destrabar el botón si Azure rechaza las credenciales (Error 1006)
+                    if (e.reason === SpeechSDK.CancellationReason.Error) {
+                        alert("Conexión rechazada por Azure (1006). Verifica que tu Llave y Región sean correctas y no contengan espacios ocultos.");
+                    }
+                    
                     detenerTraduccionAzure();
                 };
 
@@ -484,18 +489,33 @@
 
         function detenerTraduccionAzure() {
             if (recognizer) {
-                recognizer.stopContinuousRecognitionAsync(() => {
-                    isRecording = false;
-                    idiomaGlobalDeteccion = null;
-                    recordBtn.textContent = "Iniciar Transmisión";
-                    recordBtn.classList.remove('recording');
-                    estado.textContent = "Sistema en espera.";
-                    
-                    document.querySelectorAll('.message-live').forEach(e => e.remove());
-                    
-                    recognizer.close();
-                    recognizer = undefined;
-                });
+                // Forzamos el cierre de la conexión activa para evitar bucles zombis
+                try {
+                    recognizer.stopContinuousRecognitionAsync(() => {
+                        finalizarUI();
+                    }, () => {
+                        finalizarUI();
+                    });
+                } catch (e) {
+                    finalizarUI();
+                }
+            } else {
+                finalizarUI();
+            }
+        }
+
+        function finalizarUI() {
+            isRecording = false;
+            idiomaGlobalDeteccion = null;
+            recordBtn.textContent = "Iniciar Transmisión";
+            recordBtn.classList.remove('recording');
+            estado.textContent = "Sistema en espera.";
+            
+            document.querySelectorAll('.message-live').forEach(e => e.remove());
+            
+            if (recognizer) {
+                recognizer.close();
+                recognizer = undefined;
             }
         }
 
