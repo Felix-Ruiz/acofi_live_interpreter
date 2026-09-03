@@ -7,6 +7,8 @@
     <link rel="manifest" href="/manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <link rel="icon" type="image/png" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/icon-192.png">
     <style>
         :root {
             --color-fondo: #FDFEFE;
@@ -190,7 +192,6 @@
     </div>
 
     <script>
-        // Lógica PWA y Detección de OS
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
         const installOverlay = document.getElementById('installOverlay');
@@ -198,7 +199,6 @@
         const androidUI = document.getElementById('android-ui');
         let deferredPrompt;
 
-        // Mostrar Pop-up solo si no está ya instalada y no se ha omitido hoy
         if (!isStandalone && !localStorage.getItem('pwa_skip')) {
             installOverlay.style.display = 'flex';
             
@@ -209,7 +209,6 @@
             }
         }
 
-        // Android: Capturar el evento de instalación
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
@@ -227,7 +226,7 @@
 
         function cerrarPopup() {
             installOverlay.style.display = 'none';
-            localStorage.setItem('pwa_skip', 'true'); // No volver a molestar en este dispositivo
+            localStorage.setItem('pwa_skip', 'true');
         }
     </script>
 </body>

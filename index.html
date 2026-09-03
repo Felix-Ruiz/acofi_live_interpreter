@@ -11,6 +11,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Acofi">
     <meta name="theme-color" content="#FFFFFF">
+    <link rel="icon" type="image/png" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/icon-192.png">
     
     <script src="https://cdn.jsdelivr.net/npm/microsoft-cognitiveservices-speech-sdk@latest/distrib/browser/microsoft.cognitiveservices.speech.sdk.bundle-min.js"></script>
     <style>
@@ -462,7 +464,6 @@
                 recognizer.canceled = (s, e) => {
                     console.error("Conexión interrumpida:", e.errorDetails);
                     
-                    // FIX: Destrabar el botón si Azure rechaza las credenciales (Error 1006)
                     if (e.reason === SpeechSDK.CancellationReason.Error) {
                         alert("Conexión rechazada por Azure (1006). Verifica que tu Llave y Región sean correctas y no contengan espacios ocultos.");
                     }
@@ -489,7 +490,6 @@
 
         function detenerTraduccionAzure() {
             if (recognizer) {
-                // Forzamos el cierre de la conexión activa para evitar bucles zombis
                 try {
                     recognizer.stopContinuousRecognitionAsync(() => {
                         finalizarUI();
